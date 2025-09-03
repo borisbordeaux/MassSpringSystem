@@ -154,7 +154,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Our state
-    bool show_demo_window = false;
     bool updateMSS = false;
     bool enableVSync = true;
     bool visibleControlPoints = true;
