@@ -15,6 +15,14 @@ public:
 
     inline Mass const& m2() const { return m_m2; }
 
+    inline float k() const { return m_k; }
+
+    inline float length() const { return m_length; }
+
+    inline void setK(float k) { m_k = k; }
+
+    inline void setLength(float length) { m_length = length; }
+
 private:
     Mass& m_m1;
     Mass& m_m2;

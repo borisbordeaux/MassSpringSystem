@@ -8,12 +8,14 @@ namespace mss {
 class Mass {
 public:
     explicit Mass(std::size_t dim, float damping);
-    Mass(Vector const& pos, bool fixed, float damping);
+    Mass(Vector const& pos);
 
     void applyForce(Vector const& force);
     void update();
 
     [[nodiscard]] inline Vector const& position() const { return m_pos; }
+
+    [[nodiscard]] inline Vector& position() { return m_pos; }
 
     [[nodiscard]] inline bool fixed() const { return m_fixed; }
 

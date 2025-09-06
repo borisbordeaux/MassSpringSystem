@@ -2,66 +2,56 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
+#include "imgui/imgui_internal.h"
 
 #include <iostream>
 #include <random>
 #include "massspringsystem/massspringsystem.h"
 #include "implot/implot.h"
+#include "imguifiledialog/ImGuiFileDialog.h"
+#include <armadillo>
 
 void initSystem(mss::MassSpringSystem& system, float k, float l, float damping) {
-    system.clear();
-    system.setDamping(damping);
+    system.clear(9);
     //add fixed control points
-    system.addMass(mss::Vector { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, true);
-    system.addMass(mss::Vector { 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, true);
-    system.addMass(mss::Vector { 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, true);
-    system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, true);
-    system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f }, true);
-    system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f }, true);
-    system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f }, true);
-    system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f }, true);
-    system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f }, true);
+    system.addMass(mss::Vector { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
+    system.addMass(mss::Vector { 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
+    system.addMass(mss::Vector { 0.0f, 0.25f, 0.50f, 0.25f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
+    system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
+    system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f });
+    system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.25f, 0.50f, 0.25f, 0.0f, 0.0f });
+    system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f });
+    system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f });
+    system.addMass(mss::Vector { 0.25f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.25f, 0.50f });
 
     //add subdivision points
-    std::random_device rd;
-    std::mt19937 generator(rd());
-    std::uniform_real_distribution<float> distribution(0.0f, 0.25f);
     for (int i = 0; i < 33; i++) {
         if (i == 9 - 9) {
-            system.addMass(mss::Vector { 0.6666f, 0.3333f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, true);
+            system.addMass(mss::Vector { 0.6666f, 0.3333f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
         } else if (i == 16 - 9) {
-            system.addMass(mss::Vector { 0.3333f, 0.6666f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, true);
+            system.addMass(mss::Vector { 0.3333f, 0.6666f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
         } else if (i == 22 - 9) {
-            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.6666f, 0.3333f, 0.0f, 0.0f, 0.0f, 0.0f }, true);
+            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.6666f, 0.3333f, 0.0f, 0.0f, 0.0f, 0.0f });
         } else if (i == 28 - 9) {
-            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.3333f, 0.6666f, 0.0f, 0.0f, 0.0f, 0.0f }, true);
+            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.3333f, 0.6666f, 0.0f, 0.0f, 0.0f, 0.0f });
         } else if (i == 33 - 9) {
-            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6666f, 0.3333f, 0.0f }, true);
+            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.6666f, 0.3333f, 0.0f });
         } else if (i == 39 - 9) {
-            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.3333f, 0.6666f, 0.0f }, true);
+            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.3333f, 0.6666f, 0.0f });
         } else if (i == 15 - 9) {
-            system.addMass(mss::Vector { 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f }, true);
+            system.addMass(mss::Vector { 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f });
         } else if (i == 40 - 9) {
-            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.5f }, true);
+            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.5f });
         } else if (i == 17 - 9) {
-            system.addMass(mss::Vector { 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, true);
+            system.addMass(mss::Vector { 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
         } else if (i == 21 - 9) {
-            system.addMass(mss::Vector { 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f }, true);
+            system.addMass(mss::Vector { 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
         } else if (i == 29 - 9) {
-            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f }, true);
+            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f });
         } else if (i == 32 - 9) {
-            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f }, true);
+            system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.0f });
         } else {
-            float n1 = distribution(generator);
-            float n2 = distribution(generator);
-            float n3 = distribution(generator);
-            float n4 = distribution(generator);
-            float n5 = distribution(generator);
-            float n6 = distribution(generator);
-            float n7 = distribution(generator);
-            float n8 = distribution(generator);
-            float n9 = 1.0f - n1 - n2 - n3 - n4 - n5 - n6 - n7 - n8;
-            system.addMass(mss::Vector { n1, n2, n3, n4, n5, n6, n7, n8, n9 });
+            system.addMass(damping);
         }
     }
 
@@ -115,6 +105,117 @@ void initSystem(mss::MassSpringSystem& system, float k, float l, float damping) 
     system.addSpring(38, 39, k, l);
 }
 
+void alignPoints(mss::MassSpringSystem& system) {
+    std::vector<std::size_t> points = {
+            10, 11, 20,
+            23, 24, 27,
+            34, 35, 38,
+            13, 12, 19,
+            19, 18, 26,
+            26, 25, 31,
+            31, 30, 37,
+            37, 36, 41,
+            41, 14, 13
+    };
+    for (std::size_t i = 0; i < points.size(); i += 3) {
+        auto& pL = system.masses().at(points[i]);
+        auto& pM = system.masses().at(points[i + 1]);
+        auto& pR = system.masses().at(points[i + 2]);
+        for (std::size_t dim = 0; dim < system.dimension(); dim++) {
+            pM.position().at(dim) = (pL.position().at(dim) + pR.position().at(dim)) / 2.0f;
+        }
+    }
+}
+
+void updateK(mss::MassSpringSystem& system, float newK) {
+    std::vector<std::size_t> springs = { 25, 26, 27, 28, 30, 31, 36, 37, 39, 40, 45, 46 };
+    for (std::size_t i: springs) {
+        system.springs()[i].setK(newK);
+    }
+}
+
+ImVec2 averageOf(std::vector<ImVec2> const& points) {
+    ImVec2 res;
+    for (ImVec2 const& point: points) {
+        res.x += point.x;
+        res.y += point.y;
+    }
+    res.x /= static_cast<float>(points.size());
+    res.y /= static_cast<float>(points.size());
+    return res;
+}
+
+void drawFace(std::vector<ImVec2> const& points, ImU32 col) {
+    ImPlot::PushPlotClipRect();
+    for (int i = 0; i < points.size() - 1; i++) {
+        std::size_t nextIndex = i + 1 == points.size() - 1 ? 0 : i + 1;
+        ImPlot::GetPlotDrawList()->AddTriangleFilled(points[i], points[nextIndex], points[points.size() - 1], col);
+    }
+    ImPlot::PopPlotClipRect();
+}
+
+ImVec2 modelingCoordFromBarycentricCoord(mss::Vector const& pos, arma::mat::fixed<2, 9> const& controlPoints) {
+    float x = 0;
+    float y = 0;
+    for (std::size_t j = 0; j < pos.dim(); j++) {
+        x += pos.at(j) * static_cast<float>(controlPoints.at(0, j));
+        y += pos.at(j) * static_cast<float>(controlPoints.at(1, j));
+    }
+    return { x, y };
+}
+
+void drawSubFaces(std::vector<arma::mat99> const& T, arma::mat::fixed<2, 9> const& controlPoints, int iterationLevel, std::size_t indexColor, int maxIterationLevel) {
+    std::vector<ImU32> faceColors = {
+            ImColor(129, 50, 255),
+            ImColor(252, 127, 0),
+            ImColor(0, 71, 232),
+            ImColor(205, 207, 0),
+            ImColor(206, 0, 0),
+            ImColor(0, 183, 0),
+            ImColor(178, 180, 177)
+    };
+    if (iterationLevel == 0) {
+        std::vector<ImVec2> points;
+        points.reserve(9);
+        for (int row = 0; row < 9; row++) {
+            points.push_back(ImPlot::PlotToPixels(controlPoints.at(0, row), controlPoints.at(1, row)));
+        }
+        points.push_back(averageOf(points));
+        drawFace(points, faceColors[indexColor]);
+    } else {
+        for (std::size_t i = 0; i < T.size(); i++) {
+            if (iterationLevel == maxIterationLevel) {
+                drawSubFaces(T, controlPoints * T[i], iterationLevel - 1, i, maxIterationLevel);
+            } else {
+                drawSubFaces(T, controlPoints * T[i], iterationLevel - 1, indexColor, maxIterationLevel);
+            }
+        }
+    }
+}
+
+void drawIFS(mss::MassSpringSystem const& system, arma::mat::fixed<2, 9> const& controlPoints, int iterationLevel) {
+    std::vector<std::vector<std::size_t>> indices = {
+            { 0,  9,  10, 11, 12, 13, 14, 8,  15 },
+            { 16, 1,  17, 2,  18, 19, 12, 11, 20 },
+            { 18, 2,  21, 3,  22, 23, 24, 25, 26 },
+            { 25, 24, 27, 28, 4,  29, 5,  30, 31 },
+            { 35, 36, 37, 30, 5,  32, 6,  33, 34 },
+            { 8,  14, 41, 36, 35, 38, 39, 7,  40 }
+    };
+
+    std::vector<arma::mat99> T;
+    T.resize(6);
+    for (int i = 0; i < 6; i++) {
+        for (int col = 0; col < 9; col++) {
+            for (int row = 0; row < 9; row++) {
+                T[i].at(row, col) = system.masses().at(indices[i][col]).position().at(row);
+            }
+        }
+    }
+
+    drawSubFaces(T, controlPoints, iterationLevel, 6, iterationLevel);
+}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     if (!glfwInit())
         return 1;
@@ -122,6 +223,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     const char* glsl_version = "#version 330";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_SAMPLES, 16);
 
     // Create window with graphics context
     float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
@@ -146,6 +248,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     // Setup scaling
     ImGuiStyle& style = ImGui::GetStyle();
     style.ScaleAllSizes(main_scale);  // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+    style.AntiAliasedFill = false;
     io.ConfigDpiScaleFonts = true;               // [Experimental] Automatically overwrite style.FontScaleDpi in Begin() when Monitor DPI changes. This will scale fonts but _NOT_ scale sizes/padding for now.
     io.ConfigDpiScaleViewports = true;           // [Experimental] Scale Dear ImGui and Platform Windows when Monitor DPI changes.
 
@@ -162,29 +265,38 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     float k = 0.01f;
     float l = 0.05f;
     float damping = 0.9f;
+    char textDescription[5000] = { "d 9\n"
+                                   "m 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0\n"
+                                   "n 1 0.9\n"
+                                   "m 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n"
+                                   "s 0 1 0.01 0.0\n"
+                                   "s 1 2 0.03 0.0" };
+    float lacunaK = k;
+    bool visibleIFS = true;
+    int iterationLevel = 0;
 
-    std::vector<float> controlPointsX = { 600.0f, 300.0f, 0.0f, -300.0f, -600.0f, -324.0f, -300.0f, 300.0f, 324.0f };
-    std::vector<float> controlPointsY = { 0.0f, 520.0f, 390.0f, 520.0f, 0.0f, -187.0f, -520.0f, -520.0f, -187.0f };
+    arma::mat::fixed<2, 9> controlPoints = {
+            { 600.0, 300.0, 0.0,   -300.0, -600.0, -338.0, -300.0, 300.0,  338.0 },
+            { 0.0,   520.0, 390.0, 520.0,  0.0,    -195.0, -520.0, -520.0, -195.0 }
+    };
+
+    mss::MassSpringSystem system(9);
+    initSystem(system, k, l, damping);
 
     // Will be computed on each frame
     std::vector<float> subdivisionPointsX;
     std::vector<float> subdivisionPointsY;
-    subdivisionPointsX.resize(33);
-    subdivisionPointsY.resize(33);
-
-    mss::MassSpringSystem system(9, damping);
-    initSystem(system, k, l, damping);
-
-    // Will be computed on each frame
     std::vector<float> springsX;
     std::vector<float> springsY;
+    // Resize them for performance purposes
+    subdivisionPointsX.resize(system.masses().size());
+    subdivisionPointsY.resize(system.masses().size());
     springsX.resize(system.springs().size() * 2);
     springsY.resize(system.springs().size() * 2);
 
-
     ImPlotStyle& imPlotStyle = ImPlot::GetStyle();
     ImVec4* colors = imPlotStyle.Colors;
-    colors[ImPlotCol_Line] = ImVec4(0.2f, 0.3f, 1.0f, 1.0f);
+    colors[ImPlotCol_Line] = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
     colors[ImPlotCol_PlotBg] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
     imPlotStyle.MajorTickLen = ImVec2(0, 0);
     imPlotStyle.MinorTickLen = ImVec2(0, 0);
@@ -192,6 +304,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     imPlotStyle.MinorTickSize = ImVec2(0, 0);
     imPlotStyle.MajorGridSize = ImVec2(0, 0);
     imPlotStyle.MinorGridSize = ImVec2(0, 0);
+    imPlotStyle.LineWeight = 2.0f;
 
     // Main loop
     while (!glfwWindowShouldClose(window)) {
@@ -205,78 +318,193 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
 
         // Specify all ImGui widgets we want to render
         {
-            ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar);
+            ImGuiID dockSpaceId = ImGui::GetID("MyDockSpaceId");
+            const bool init = ImGui::DockBuilderGetNode(dockSpaceId) == nullptr;
 
+            if (init) {
+                std::cout << dockSpaceId << std::endl;
+                ImGui::DockBuilderAddNode(dockSpaceId, ImGuiDockNodeFlags_DockSpace);
+                ImGui::DockBuilderSetNodeSize(dockSpaceId, ImGui::GetMainViewport()->Size);
+                // Horizontal split : 70% for the main window and 30% for the description window
+                ImGuiID dock_left, dock_right;
+                dock_left = ImGui::DockBuilderSplitNode(dockSpaceId, ImGuiDir_Left, 0.7f, nullptr, &dock_right);
+                // Associate windows to dock spaces
+                ImGui::DockBuilderDockWindow("Mass Spring System", dock_left);
+                ImGui::DockBuilderDockWindow("Text description", dock_right);
+                ImGui::DockBuilderFinish(dockSpaceId);
+            }
+            ImGui::DockSpaceOverViewport(dockSpaceId, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar);
+
+            //ImGui::ShowDemoWindow();
+            //ImPlot::ShowDemoWindow();
             ImGui::Begin("Mass Spring System");
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-            ImGui::SliderFloat("Spring Constant", &k, 0.001f, 0.5f);
-            ImGui::SliderFloat("Spring Length", &l, 0.0f, 1.0f);
-            ImGui::SliderFloat("Damping", &damping, 0.0f, 1.0f);
+
+            if (ImGui::BeginTable("table1", 2)) {
+                ImGui::TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("two", ImGuiTableColumnFlags_WidthStretch); // Default to 200.0f
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("Spring Constant:");
+                ImGui::TableNextColumn();
+                ImGui::SetNextItemWidth(-1);
+                ImGui::SliderFloat("##Spring Constant", &k, 0.001f, 0.5f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("  Spring Length:");
+                ImGui::TableNextColumn();
+                ImGui::SetNextItemWidth(-1);
+                ImGui::SliderFloat("##Spring Length", &l, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("        Damping:");
+                ImGui::TableNextColumn();
+                ImGui::SetNextItemWidth(-1);
+                ImGui::SliderFloat("##Damping", &damping, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::EndTable();
+            }
+
             if (ImGui::Checkbox("Enable VSync", &enableVSync)) {
                 glfwSwapInterval(enableVSync ? 1 : 0); // Enable vsync
             }
             ImGui::SameLine();
             ImGui::Checkbox("Update Mass Spring System", &updateMSS);
+            ImGui::Checkbox("Control Points", &visibleControlPoints);
             ImGui::SameLine();
-            ImGui::Checkbox("Visible Control Points", &visibleControlPoints);
+            ImGui::Checkbox("Subdivision Points", &visibleSubdivisionPoints);
             ImGui::SameLine();
-            ImGui::Checkbox("Visible Subdivision Points", &visibleSubdivisionPoints);
+            ImGui::Checkbox("Springs", &visibleSprings);
             ImGui::SameLine();
-            ImGui::Checkbox("Visible Springs", &visibleSprings);
+            ImGui::Checkbox("IFS", &visibleIFS);
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(200);
+            ImGui::SliderInt("Iteration Level", &iterationLevel, 0, 7, "%d", ImGuiSliderFlags_AlwaysClamp);
             if (ImGui::Button("Reset System")) {
                 initSystem(system, k, l, damping);
             }
+            ImGui::SameLine();
+            if (ImGui::Button("Load From File...")) {
+                IGFD::FileDialogConfig config;
+                config.path = "../../example";
+                config.flags |= ImGuiFileDialogFlags_::ImGuiFileDialogFlags_Modal;
+                ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose an MSS File", ".mss", config);
+            }
+            if (ImGui::Button("Test Align")) {
+                updateMSS = false;
+                alignPoints(system);
+            }
+            ImGui::SameLine();
+            ImGui::Text("Lacuna springs constant");
+            ImGui::SameLine();
+            if (ImGui::SliderFloat("##Lacuna K", &lacunaK, 0.001f, 0.2f, "%.3f", ImGuiSliderFlags_AlwaysClamp)) {
+                updateMSS = true;
+                updateK(system, lacunaK);
+            }
+
+            // display dialog
+            if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(700, 350))) {
+                if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
+                    std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+                    if (!system.loadFromFile(filePathName)) {
+                        ImGui::OpenPopup("Error");
+                    } else {
+                        subdivisionPointsX.resize(system.masses().size());
+                        subdivisionPointsY.resize(system.masses().size());
+                        springsX.resize(system.springs().size() * 2);
+                        springsY.resize(system.springs().size() * 2);
+                    }
+                }
+                // close
+                ImGuiFileDialog::Instance()->Close();
+            }
+
+            ImGui::Begin("Text description", nullptr, ImGuiWindowFlags_NoCollapse);
+            if (ImGui::Button("Load", ImVec2(-1, 0))) {
+                if (!system.loadFromString(textDescription)) {
+                    ImGui::OpenPopup("Error");
+                } else {
+                    subdivisionPointsX.resize(system.masses().size());
+                    subdivisionPointsY.resize(system.masses().size());
+                    springsX.resize(system.springs().size() * 2);
+                    springsY.resize(system.springs().size() * 2);
+                }
+            }
+            ImGui::InputTextMultiline("##", &textDescription[0], 5000, ImVec2(-1, -1));
+            if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text("Error: Invalid description!");
+                ImGui::Separator();
+
+                if (ImGui::BeginTable("table2", 3, ImGuiTableFlags_SizingStretchSame)) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+                    ImGui::EndTable();
+                }
+
+                ImGui::SetItemDefaultFocus();
+                ImGui::EndPopup();
+            }
+            ImGui::End();
+
+            if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                ImGui::Text("Error: Invalid description!");
+                ImGui::Separator();
+
+                if (ImGui::BeginTable("table2", 3, ImGuiTableFlags_SizingStretchSame)) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    if (ImGui::Button("OK", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+                    ImGui::EndTable();
+                }
+
+                ImGui::SetItemDefaultFocus();
+                ImGui::EndPopup();
+            }
 
             // compute coordinates based on barycentric coordinates
-            for (int i = 9; i < 42; i++) {
-                float x = 0;
-                float y = 0;
-                for (int j = 0; j < 9; j++) {
-                    x += system.masses()[i].position().at(j) * controlPointsX[j];
-                    y += system.masses()[i].position().at(j) * controlPointsY[j];
-                }
-                subdivisionPointsX[i - 9] = x;
-                subdivisionPointsY[i - 9] = y;
+            for (int i = 0; i < system.masses().size(); i++) {
+                ImVec2 pos = modelingCoordFromBarycentricCoord(system.masses()[i].position(), controlPoints);
+                subdivisionPointsX[i] = pos.x;
+                subdivisionPointsY[i] = pos.y;
             }
 
             // compute X/Y coordinates of spring lines
             for (std::size_t i = 0; i < system.springs().size(); i++) {
-                float x1 = 0.0f;
-                float x2 = 0.0f;
-                float y1 = 0.0f;
-                float y2 = 0.0f;
-
-                mss::Vector m1Pos = system.springs()[i].m1().position();
-                mss::Vector m2Pos = system.springs()[i].m2().position();
-
-                for (int j = 0; j < 9; j++) {
-                    x1 += m1Pos.at(j) * controlPointsX[j];
-                    y1 += m1Pos.at(j) * controlPointsY[j];
-
-                    x2 += m2Pos.at(j) * controlPointsX[j];
-                    y2 += m2Pos.at(j) * controlPointsY[j];
-                }
-
-                springsX[2 * i] = x1;
-                springsX[2 * i + 1] = x2;
-                springsY[2 * i] = y1;
-                springsY[2 * i + 1] = y2;
+                ImVec2 pos1 = modelingCoordFromBarycentricCoord(system.springs()[i].m1().position(), controlPoints);
+                ImVec2 pos2 = modelingCoordFromBarycentricCoord(system.springs()[i].m2().position(), controlPoints);
+                springsX[2 * i] = pos1.x;
+                springsX[2 * i + 1] = pos2.x;
+                springsY[2 * i] = pos1.y;
+                springsY[2 * i + 1] = pos2.y;
             }
 
             if (ImPlot::BeginPlot("Mass Spring System Viewer", ImVec2(-1, -1), ImPlotFlags_Equal | ImPlotFlags_NoLegend | ImPlotFlags_NoMouseText)) {
                 ImPlot::SetupAxes("##x", "##y", ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels);
-                if (visibleControlPoints) {
-                    ImPlot::PlotScatter("Data 1", controlPointsX.data(), controlPointsY.data(), 9);
+                if (visibleIFS) {
+                    drawIFS(system, controlPoints, iterationLevel);
                 }
                 if (visibleSubdivisionPoints) {
-                    ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
-                    ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 4, ImPlot::GetColormapColor(1), IMPLOT_AUTO, ImPlot::GetColormapColor(1));
-                    ImPlot::PlotScatter("Data 2", subdivisionPointsX.data(), subdivisionPointsY.data(), 33);
+                    ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.5f);
+                    ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 4, ImColor(0, 0, 0), IMPLOT_AUTO);
+                    ImPlot::PlotScatter("Data 2", subdivisionPointsX.data(), subdivisionPointsY.data(), static_cast<int>(system.masses().size()));
                     ImPlot::PopStyleVar();
                 }
                 if (visibleSprings) {
-                    ImPlot::PlotLine("Springs", springsX.data(), springsY.data(), static_cast<int>(springsY.size()), ImPlotLineFlags_Segments);
+                    ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
+                    ImPlot::PlotLine("Springs", springsX.data(), springsY.data(), static_cast<int>(system.springs().size() * 2), ImPlotLineFlags_Segments);
+                    ImPlot::PopStyleVar();
                 }
+                if (visibleControlPoints) {
+                    for (std::size_t i = 0; i < system.dimension(); i++) {
+                        ImPlot::DragPoint(static_cast<int>(i), &controlPoints.at(0, i), &controlPoints.at(1, i), ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+                    }
+                }
+
                 ImPlot::EndPlot();
             }
 

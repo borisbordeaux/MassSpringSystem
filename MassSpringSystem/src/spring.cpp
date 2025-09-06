@@ -2,7 +2,6 @@
 #include "massspringsystem/vector.h"
 #include "massspringsystem/mass.h"
 
-
 namespace mss {
 Spring::Spring(Mass& m1, Mass& m2, float k, float length) : m_m1(m1), m_m2(m2), m_k(k), m_length(length) {}
 
