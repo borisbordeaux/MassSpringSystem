@@ -8,7 +8,7 @@ namespace mss {
 class Mass {
 public:
     explicit Mass(std::size_t dim, float damping);
-    Mass(Vector const& pos);
+    explicit Mass(Vector const& pos);
 
     void applyForce(Vector const& force);
     void update();
