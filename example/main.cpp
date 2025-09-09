@@ -11,9 +11,31 @@
 #include "imguifiledialog/ImGuiFileDialog.h"
 #include <armadillo>
 
-void initSystem(mss::MassSpringSystem& system, float k, float l, float damping) {
+void initSystem(mss::MassSpringSystem& system, std::vector<float>& subdivisionPointsX, std::vector<float>& subdivisionPointsY, std::vector<float>& springsX, std::vector<float>& springsY, arma::mat& controlPoints) {
+    subdivisionPointsX.resize(system.masses().size());
+    subdivisionPointsY.resize(system.masses().size());
+    springsX.resize(system.springs().size() * 2);
+    springsY.resize(system.springs().size() * 2);
+    if (controlPoints.n_cols != system.dimension()) {
+        controlPoints.clear();
+        controlPoints.set_size(2, system.dimension()); // always 2D
+        float pi = 3.1415926f;
+        float r = 500.0f;
+        std::size_t n = system.dimension();
+        for (int i = 0; i < n; i++) {
+            float angle = static_cast<float>(i) * 2.0f * pi / static_cast<float>(n);
+            controlPoints(0, i) = r * std::cos(angle);
+            controlPoints(1, i) = r * std::sin(angle);
+        }
+    }
+}
+
+void loadInitSystem(mss::MassSpringSystem& system, float k, float l, float damping, std::vector<float>& subdivisionPointsX, std::vector<float>& subdivisionPointsY, std::vector<float>& springsX, std::vector<float>& springsY, arma::mat& controlPoints) {
     system.clear(9);
-    //add fixed control points
+    controlPoints.set_size(2, 9);
+    controlPoints << 600.0 << 300.0 << 0.0 << -300.0 << -600.0 << -338.0 << -300.0 << 300.0 << 338.0 << arma::endr
+                  << 0.0 << 520.0 << 390.0 << 520.0 << 0.0 << -195.0 << -520.0 << -520.0 << -195.0 << arma::endr;
+    // add fixed masses for control points
     system.addMass(mss::Vector { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
     system.addMass(mss::Vector { 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
     system.addMass(mss::Vector { 0.0f, 0.25f, 0.50f, 0.25f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
@@ -24,7 +46,7 @@ void initSystem(mss::MassSpringSystem& system, float k, float l, float damping) 
     system.addMass(mss::Vector { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f });
     system.addMass(mss::Vector { 0.25f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.25f, 0.50f });
 
-    //add subdivision points
+    // add subdivision points
     for (int i = 0; i < 33; i++) {
         if (i == 9 - 9) {
             system.addMass(mss::Vector { 0.6666f, 0.3333f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f });
@@ -103,6 +125,8 @@ void initSystem(mss::MassSpringSystem& system, float k, float l, float damping) 
     system.addSpring(36, 37, k, l);
     system.addSpring(36, 41, k, l);
     system.addSpring(38, 39, k, l);
+
+    initSystem(system, subdivisionPointsX, subdivisionPointsY, springsX, springsY, controlPoints);
 }
 
 void alignPoints(mss::MassSpringSystem& system) {
@@ -154,7 +178,7 @@ void drawFace(std::vector<ImVec2> const& points, ImU32 col) {
     ImPlot::PopPlotClipRect();
 }
 
-ImVec2 modelingCoordFromBarycentricCoord(mss::Vector const& pos, arma::mat::fixed<2, 9> const& controlPoints) {
+ImVec2 modelingCoordFromBarycentricCoord(mss::Vector const& pos, arma::mat const& controlPoints) {
     float x = 0;
     float y = 0;
     for (std::size_t j = 0; j < pos.dim(); j++) {
@@ -247,8 +271,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
 
     // Setup scaling
     ImGuiStyle& style = ImGui::GetStyle();
-    style.ScaleAllSizes(main_scale);  // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
-    style.AntiAliasedFill = false;
+    style.ScaleAllSizes(main_scale); // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+    style.AntiAliasedFill = false;               // Better result when multisampling is enabled
     io.ConfigDpiScaleFonts = true;               // [Experimental] Automatically overwrite style.FontScaleDpi in Begin() when Monitor DPI changes. This will scale fonts but _NOT_ scale sizes/padding for now.
     io.ConfigDpiScaleViewports = true;           // [Experimental] Scale Dear ImGui and Platform Windows when Monitor DPI changes.
 
@@ -265,29 +289,34 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     float k = 0.01f;
     float l = 0.05f;
     float damping = 0.9f;
-    char textDescription[5000] = { "d 9\n"
-                                   "m 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0\n"
+    char textDescription[5000] = { "# d dimension\n"
+                                   "d 3\n"
+                                   "# fixed mass with barycentric coordinates\n"
+                                   "m 1.0 0.0 0.0\n"
+                                   "m 0.0 1.0 0.0\n"
+                                   "m 0.0 0.0 1.0\n"
+                                   "# masses with random coordinates\n"
+                                   "# n number_of_masses damping\n"
                                    "n 1 0.9\n"
-                                   "m 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0\n"
-                                   "s 0 1 0.01 0.0\n"
-                                   "s 1 2 0.03 0.0" };
+                                   "# springs index_mass_1 index_mass_2 k length\n"
+                                   "s 3 0 0.03 0.0\n"
+                                   "s 3 1 0.03 0.0\n"
+                                   "s 3 2 0.03 0.0" };
     float lacunaK = k;
     bool visibleIFS = true;
     int iterationLevel = 0;
 
-    arma::mat::fixed<2, 9> controlPoints = {
-            { 600.0, 300.0, 0.0,   -300.0, -600.0, -338.0, -300.0, 300.0,  338.0 },
-            { 0.0,   520.0, 390.0, 520.0,  0.0,    -195.0, -520.0, -520.0, -195.0 }
-    };
-
-    mss::MassSpringSystem system(9);
-    initSystem(system, k, l, damping);
+    arma::mat controlPoints;
 
     // Will be computed on each frame
     std::vector<float> subdivisionPointsX;
     std::vector<float> subdivisionPointsY;
     std::vector<float> springsX;
     std::vector<float> springsY;
+
+    mss::MassSpringSystem system(9);
+    loadInitSystem(system, k, l, damping, subdivisionPointsX, subdivisionPointsY, springsX, springsY, controlPoints);
+
     // Resize them for performance purposes
     subdivisionPointsX.resize(system.masses().size());
     subdivisionPointsY.resize(system.masses().size());
@@ -298,12 +327,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     ImVec4* colors = imPlotStyle.Colors;
     colors[ImPlotCol_Line] = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
     colors[ImPlotCol_PlotBg] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    imPlotStyle.MajorTickLen = ImVec2(0, 0);
-    imPlotStyle.MinorTickLen = ImVec2(0, 0);
-    imPlotStyle.MajorTickSize = ImVec2(0, 0);
-    imPlotStyle.MinorTickSize = ImVec2(0, 0);
-    imPlotStyle.MajorGridSize = ImVec2(0, 0);
-    imPlotStyle.MinorGridSize = ImVec2(0, 0);
     imPlotStyle.LineWeight = 2.0f;
 
     // Main loop
@@ -346,6 +369,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::AlignTextToFramePadding();
+                ImGui::Text("Lacuna springs constant");
+                ImGui::TableNextColumn();
+                ImGui::SetNextItemWidth(-1);
+                if (ImGui::SliderFloat("##Lacuna K", &lacunaK, 0.001f, 0.2f, "%.3f", ImGuiSliderFlags_AlwaysClamp)) {
+                    updateMSS = true;
+                    updateK(system, lacunaK);
+                }
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::AlignTextToFramePadding();
                 ImGui::Text("Spring Constant:");
                 ImGui::TableNextColumn();
                 ImGui::SetNextItemWidth(-1);
@@ -366,10 +399,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
                 ImGui::SliderFloat("##Damping", &damping, 0.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
                 ImGui::EndTable();
             }
-
-            if (ImGui::Checkbox("Enable VSync", &enableVSync)) {
-                glfwSwapInterval(enableVSync ? 1 : 0); // Enable vsync
-            }
+            if (ImGui::Checkbox("Enable VSync", &enableVSync)) { glfwSwapInterval(enableVSync ? 1 : 0); }
             ImGui::SameLine();
             ImGui::Checkbox("Update Mass Spring System", &updateMSS);
             ImGui::Checkbox("Control Points", &visibleControlPoints);
@@ -377,13 +407,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
             ImGui::Checkbox("Subdivision Points", &visibleSubdivisionPoints);
             ImGui::SameLine();
             ImGui::Checkbox("Springs", &visibleSprings);
-            ImGui::SameLine();
-            ImGui::Checkbox("IFS", &visibleIFS);
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(200);
-            ImGui::SliderInt("Iteration Level", &iterationLevel, 0, 7, "%d", ImGuiSliderFlags_AlwaysClamp);
+            if (system.dimension() == 9 && system.masses().size() == 42) {
+                ImGui::SameLine();
+                ImGui::Checkbox("IFS", &visibleIFS);
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(200);
+                ImGui::SliderInt("Iteration Level", &iterationLevel, 0, 7, "%d", ImGuiSliderFlags_AlwaysClamp);
+            }
             if (ImGui::Button("Reset System")) {
-                initSystem(system, k, l, damping);
+                loadInitSystem(system, k, l, damping, subdivisionPointsX, subdivisionPointsY, springsX, springsY, controlPoints);
             }
             ImGui::SameLine();
             if (ImGui::Button("Load From File...")) {
@@ -392,32 +424,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
                 config.flags |= ImGuiFileDialogFlags_::ImGuiFileDialogFlags_Modal;
                 ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose an MSS File", ".mss", config);
             }
-            if (ImGui::Button("Test Align")) {
+            if (system.dimension() == 9 && system.masses().size() == 42 && ImGui::Button("Test Align")) {
                 updateMSS = false;
                 alignPoints(system);
             }
-            ImGui::SameLine();
-            ImGui::Text("Lacuna springs constant");
-            ImGui::SameLine();
-            if (ImGui::SliderFloat("##Lacuna K", &lacunaK, 0.001f, 0.2f, "%.3f", ImGuiSliderFlags_AlwaysClamp)) {
-                updateMSS = true;
-                updateK(system, lacunaK);
-            }
 
-            // display dialog
             if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, ImVec2(700, 350))) {
                 if (ImGuiFileDialog::Instance()->IsOk()) { // action if OK
                     std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
                     if (!system.loadFromFile(filePathName)) {
                         ImGui::OpenPopup("Error");
                     } else {
-                        subdivisionPointsX.resize(system.masses().size());
-                        subdivisionPointsY.resize(system.masses().size());
-                        springsX.resize(system.springs().size() * 2);
-                        springsY.resize(system.springs().size() * 2);
+                        visibleIFS = false;
+                        initSystem(system, subdivisionPointsX, subdivisionPointsY, springsX, springsY, controlPoints);
                     }
                 }
-                // close
                 ImGuiFileDialog::Instance()->Close();
             }
 
@@ -426,12 +447,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
                 if (!system.loadFromString(textDescription)) {
                     ImGui::OpenPopup("Error");
                 } else {
-                    subdivisionPointsX.resize(system.masses().size());
-                    subdivisionPointsY.resize(system.masses().size());
-                    springsX.resize(system.springs().size() * 2);
-                    springsY.resize(system.springs().size() * 2);
+                    visibleIFS = false;
+                    initSystem(system, subdivisionPointsX, subdivisionPointsY, springsX, springsY, controlPoints);
                 }
             }
+
             ImGui::InputTextMultiline("##", &textDescription[0], 5000, ImVec2(-1, -1));
             if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
                 ImGui::Text("Error: Invalid description!");
@@ -484,27 +504,25 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
             }
 
             if (ImPlot::BeginPlot("Mass Spring System Viewer", ImVec2(-1, -1), ImPlotFlags_Equal | ImPlotFlags_NoLegend | ImPlotFlags_NoMouseText)) {
-                ImPlot::SetupAxes("##x", "##y", ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels);
+                ImPlot::SetupAxes("##x", "##y",
+                                  ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels,
+                                  ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoTickMarks | ImPlotAxisFlags_NoTickLabels);
+
                 if (visibleIFS) {
                     drawIFS(system, controlPoints, iterationLevel);
                 }
                 if (visibleSubdivisionPoints) {
-                    ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.5f);
-                    ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 4, ImColor(0, 0, 0), IMPLOT_AUTO);
+                    ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 4, ImColor(0, 0, 0, 127), IMPLOT_AUTO);
                     ImPlot::PlotScatter("Data 2", subdivisionPointsX.data(), subdivisionPointsY.data(), static_cast<int>(system.masses().size()));
-                    ImPlot::PopStyleVar();
                 }
                 if (visibleSprings) {
-                    ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
                     ImPlot::PlotLine("Springs", springsX.data(), springsY.data(), static_cast<int>(system.springs().size() * 2), ImPlotLineFlags_Segments);
-                    ImPlot::PopStyleVar();
                 }
                 if (visibleControlPoints) {
                     for (std::size_t i = 0; i < system.dimension(); i++) {
                         ImPlot::DragPoint(static_cast<int>(i), &controlPoints.at(0, i), &controlPoints.at(1, i), ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
                     }
                 }
-
                 ImPlot::EndPlot();
             }
 

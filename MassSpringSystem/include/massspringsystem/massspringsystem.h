@@ -14,7 +14,7 @@ class Vector;
 
 class MassSpringSystem {
 public:
-    explicit MassSpringSystem(std::size_t dim);
+    explicit MassSpringSystem(std::size_t dim = 0);
 
     void addMass(float damping);
     void addMass(Vector const& pos);
