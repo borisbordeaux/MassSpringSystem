@@ -291,17 +291,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     float damping = 0.9f;
     char textDescription[5000] = { "# d dimension\n"
                                    "d 3\n"
-                                   "# fixed mass with barycentric coordinates\n"
+                                   "# fixed masses with barycentric coordinates\n"
                                    "m 1.0 0.0 0.0\n"
                                    "m 0.0 1.0 0.0\n"
                                    "m 0.0 0.0 1.0\n"
-                                   "# masses with random coordinates\n"
+                                   "# movable masses with random coordinates\n"
                                    "# n number_of_masses damping\n"
-                                   "n 1 0.9\n"
-                                   "# springs index_mass_1 index_mass_2 k length\n"
+                                   "n 2 0.9\n"
+                                   "# springs connecting two masses\n"
+                                   "# s index_mass_1 index_mass_2 k length\n"
                                    "s 3 0 0.03 0.0\n"
                                    "s 3 1 0.03 0.0\n"
-                                   "s 3 2 0.03 0.0" };
+                                   "s 3 2 0.03 0.0\n"
+                                   "s 3 2 0.03 0.0\n"
+                                   "s 4 0 0.01 0.0\n"
+                                   "s 4 1 0.03 0.0" };
     float lacunaK = k;
     bool visibleIFS = true;
     int iterationLevel = 0;
