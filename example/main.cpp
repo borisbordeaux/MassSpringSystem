@@ -303,7 +303,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
                                    "s 3 0 0.03 0.0\n"
                                    "s 3 1 0.03 0.0\n"
                                    "s 3 2 0.03 0.0\n"
-                                   "s 3 2 0.03 0.0\n"
                                    "s 4 0 0.01 0.0\n"
                                    "s 4 1 0.03 0.0" };
     float lacunaK = k;
