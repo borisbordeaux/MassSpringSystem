@@ -1,5 +1,7 @@
 #include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <algorithm>
 #include "massspringsystem/massspringsystem.h"
 
 namespace mss {
@@ -14,8 +16,10 @@ void MassSpringSystem::addMass(Vector const& pos) {
 }
 
 void MassSpringSystem::addSpring(std::size_t indexMass1, std::size_t indexMass2, float k, float length) {
-    if (indexMass1 < m_masses.size() && indexMass2 < m_masses.size() && indexMass1 != indexMass2)
+    if (indexMass1 < m_masses.size() && indexMass2 < m_masses.size() && indexMass1 != indexMass2) {
         m_springs.emplace_back(m_masses[indexMass1], m_masses[indexMass2], k, length);
+        m_springIndices.emplace_back(indexMass1, indexMass2);
+    }
 }
 
 void MassSpringSystem::update() {
@@ -28,6 +32,7 @@ void MassSpringSystem::update() {
 
 void MassSpringSystem::clearSprings() {
     m_springs.clear();
+    m_springIndices.clear();
 }
 
 void MassSpringSystem::clearMasses() {
@@ -170,5 +175,36 @@ bool MassSpringSystem::loadFromFile(std::string const& filepath) {
 bool MassSpringSystem::loadFromString(std::string const& description) {
     std::istringstream iss(description);
     return this->loadFromDescription(iss);
+}
+
+std::string MassSpringSystem::toString() const {
+    std::string res;
+    res = "d " + std::to_string(m_dim);
+    for (mss::Mass const& m: m_masses) {
+        if (m.fixed()) {
+            res += "\nm";
+            for (std::size_t i = 0; i < m_dim; i++) {
+                res += " " + MassSpringSystem::toString(m.position().at(i));
+            }
+        } else {
+            res += "\nn 1 " + MassSpringSystem::toString(m.damping());
+        }
+    }
+    for (std::size_t i = 0; i < m_springs.size(); i++) {
+        res += "\ns ";
+        res += std::to_string(m_springIndices[i].first);
+        res += " " + std::to_string(m_springIndices[i].second);
+        res += " " + MassSpringSystem::toString(m_springs[i].k());
+        res += " " + MassSpringSystem::toString(m_springs[i].length());
+    }
+    return res;
+}
+
+std::string MassSpringSystem::toString(float value) {
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(4) << value;
+    std::string res = stream.str();
+    std::replace(res.begin(), res.end(), ',', '.');
+    return res;
 }
 } // mss

@@ -37,12 +37,16 @@ public:
 
     inline std::size_t dimension() const { return m_dim; }
 
+    std::string toString() const;
+
 private:
     bool loadFromDescription(std::istream& description);
+    static inline std::string toString(float value);
 
 private:
     std::vector<Mass> m_masses;
     std::vector<Spring> m_springs;
+    std::vector<std::pair<std::size_t, std::size_t>> m_springIndices;
     std::size_t m_dim;
 };
 

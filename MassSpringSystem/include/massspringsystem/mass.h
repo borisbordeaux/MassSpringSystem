@@ -13,11 +13,15 @@ public:
     void applyForce(Vector const& force);
     void update();
 
+    void setFixed(bool fixed) { m_fixed = fixed; }
+
     [[nodiscard]] inline Vector const& position() const { return m_pos; }
 
     [[nodiscard]] inline Vector& position() { return m_pos; }
 
     [[nodiscard]] inline bool fixed() const { return m_fixed; }
+
+    [[nodiscard]] inline float damping() const { return m_damping; }
 
 private:
     Vector m_pos;
